@@ -34,7 +34,7 @@ echo -e "${BLUE}====================================${NC}\n"
 
 # Original values
 ORIGINAL_APP_NAME="KotlinApplicationTemplate"
-ORIGINAL_APP_NAME_LOWER=${ORIGINAL_APP_NAME,,}
+ORIGINAL_APP_NAME_LOWER=$(echo "$ORIGINAL_APP_NAME" | tr '[:upper:]' '[:lower:]')
 ORIGINAL_PACKAGE_ID="com.example.kotlin.application.template"
 ORIGINAL_PACKAGE_PATH="com/example/kotlin/application/template"
 
@@ -44,7 +44,7 @@ if [ -z "$NEW_APP_NAME" ]; then
     echo -e "${RED}Error: Application name cannot be empty${NC}"
     exit 1
 fi
-NEW_APP_NAME_LOWER=${NEW_APP_NAME,,}
+NEW_APP_NAME_LOWER=$(echo "$NEW_APP_NAME" | tr '[:upper:]' '[:lower:]')
 
 # Validate app name (PascalCase, alphanumeric)
 if ! [[ $NEW_APP_NAME =~ ^[A-Z][a-zA-Z0-9]*$ ]]; then
