@@ -34,6 +34,7 @@ echo -e "${BLUE}====================================${NC}\n"
 
 # Original values
 ORIGINAL_APP_NAME="KotlinApplicationTemplate"
+ORIGINAL_APP_NAME_LOWER=${ORIGINAL_APP_NAME##*?}
 ORIGINAL_PACKAGE_ID="com.example.kotlin.application.template"
 ORIGINAL_PACKAGE_PATH="com/example/kotlin/application/template"
 
@@ -43,6 +44,7 @@ if [ -z "$NEW_APP_NAME" ]; then
     echo -e "${RED}Error: Application name cannot be empty${NC}"
     exit 1
 fi
+NEW_APP_NAME_LOWER=${NEW_APP_NAME##*?}
 
 # Validate app name (PascalCase, alphanumeric)
 if ! [[ $NEW_APP_NAME =~ ^[A-Z][a-zA-Z0-9]*$ ]]; then
@@ -68,6 +70,7 @@ NEW_PACKAGE_PATH=$(echo $NEW_PACKAGE_ID | sed 's/\./\//g')
 
 echo -e "\n${GREEN}Personalizing your KMP project...${NC}\n"
 echo -e "App Name: ${YELLOW}$ORIGINAL_APP_NAME${NC} → ${GREEN}$NEW_APP_NAME${NC}"
+echo -e "Generated App Name: ${YELLOW}$ORIGINAL_APP_NAME_LOWER${NC} → ${GREEN}$NEW_APP_NAME_LOWER${NC}"
 echo -e "Package ID: ${YELLOW}$ORIGINAL_PACKAGE_ID${NC} → ${GREEN}$NEW_PACKAGE_ID${NC}"
 echo -e "Package Path: ${YELLOW}$ORIGINAL_PACKAGE_PATH${NC} → ${GREEN}$NEW_PACKAGE_PATH${NC}\n"
 
@@ -93,6 +96,12 @@ replace_in_files() {
             if grep -q "$ORIGINAL_APP_NAME" "$file" 2>/dev/null; then
                 APP_NAME_MATCHES=$(grep -o "$ORIGINAL_APP_NAME" "$file" 2>/dev/null | wc -l | tr -d '[:space:]')
             fi
+
+            # Use grep to safely count occurrences
+            APP_NAME_LOWER_MATCHES=0
+            if grep -q "$ORIGINAL_APP_NAME_LOWER" "$file" 2>/dev/null; then
+                APP_NAME_MATCHES=$(grep -o "$ORIGINAL_APP_NAME_LOWER" "$file" 2>/dev/null | wc -l | tr -d '[:space:]')
+            fi
             
             PACKAGE_ID_MATCHES=0
             if grep -q "$ORIGINAL_PACKAGE_ID" "$file" 2>/dev/null; then
@@ -101,18 +110,23 @@ replace_in_files() {
             
             # Ensure we have clean integers
             APP_NAME_MATCHES=${APP_NAME_MATCHES:-0}
+            APP_NAME_LOWER_MATCHES=${APP_NAME_LOWER_MATCHES:-0}
             PACKAGE_ID_MATCHES=${PACKAGE_ID_MATCHES:-0}
             
             # Convert to numbers
             APP_NAME_MATCHES=$((APP_NAME_MATCHES))
+            APP_NAME_LOWER_MATCHES=$((APP_NAME_LOWER_MATCHES))
             PACKAGE_ID_MATCHES=$((PACKAGE_ID_MATCHES))
             
-            if [ $APP_NAME_MATCHES -gt 0 ] || [ $PACKAGE_ID_MATCHES -gt 0 ]; then
+            if [ $APP_NAME_MATCHES -gt 0 ] || [ $APP_NAME_LOWER_MATCHES -gt 0 ] ||  [ $PACKAGE_ID_MATCHES -gt 0 ]; then
                 if [ "$DRY_RUN" = true ]; then
                     REL_PATH=$(realpath --relative-to="$ROOT_DIR" "$file" 2>/dev/null || echo "$file")
                     echo -e "  Would modify: ${YELLOW}$REL_PATH${NC}"
                     if [ $APP_NAME_MATCHES -gt 0 ]; then
                         echo -e "    - Replace $APP_NAME_MATCHES occurrences of app name"
+                    fi
+                    if [ $APP_NAME_LOWER_MATCHES -gt 0 ]; then
+                        echo -e "    - Replace $APP_NAME_LOWER_MATCHES occurrences of app name (lowercase)"
                     fi
                     if [ $PACKAGE_ID_MATCHES -gt 0 ]; then
                         echo -e "    - Replace $PACKAGE_ID_MATCHES occurrences of package ID"
@@ -120,6 +134,7 @@ replace_in_files() {
                 else
                     # Replace content in the file
                     sed -i.bak "s/$ORIGINAL_APP_NAME/$NEW_APP_NAME/g" "$file"
+                    sed -i.bak "s/$ORIGINAL_APP_NAME_LOWER/$NEW_APP_NAME_LOWER/g" "$file"
                     sed -i.bak "s/$ORIGINAL_PACKAGE_ID/$NEW_PACKAGE_ID/g" "$file"
                     
                     # Remove backup files
@@ -134,6 +149,7 @@ replace_in_files() {
                 # Update counters
                 TOTAL_MODIFIED_FILES=$((TOTAL_MODIFIED_FILES + 1))
                 TOTAL_APP_NAME_COUNT=$((TOTAL_APP_NAME_COUNT + APP_NAME_MATCHES))
+                TOTAL_APP_NAME_COUNT=$((TOTAL_APP_NAME_COUNT + APP_NAME_LOWER_MATCHES))
                 TOTAL_PACKAGE_ID_COUNT=$((TOTAL_PACKAGE_ID_COUNT + PACKAGE_ID_MATCHES))
             fi
         fi
@@ -141,6 +157,7 @@ replace_in_files() {
     
     # Summary message
     if [ "$DRY_RUN" = true ]; then
+
         echo -e "${YELLOW}Would modify approximately $TOTAL_MODIFIED_FILES files ($TOTAL_APP_NAME_COUNT app name references, $TOTAL_PACKAGE_ID_COUNT package ID references)${NC}"
     else
         echo -e "${GREEN}✓ Text replacement completed: Modified $TOTAL_MODIFIED_FILES files ($TOTAL_APP_NAME_COUNT app name references, $TOTAL_PACKAGE_ID_COUNT package ID references)${NC}"
