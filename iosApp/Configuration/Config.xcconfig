@@ -1,0 +1,7 @@
+TEAM_ID=
+
+PRODUCT_NAME=KotlinApplicationTemplate
+PRODUCT_BUNDLE_IDENTIFIER=com.example.kotlin.application.template.KotlinApplicationTemplate$(TEAM_ID)
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0
