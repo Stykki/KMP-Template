@@ -6,14 +6,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 interface WeatherStorage {
-    suspend fun saveReykjavik(rvk: WeatherResponse)
+    suspend fun saveReykjavik(rvk: WeatherResponse?)
     fun getReykjavik(): Flow<WeatherResponse?>
 }
 
 class InMemoryWeatherStorage : WeatherStorage{
     private val storedReykjavik = MutableStateFlow<WeatherResponse?>(null)
 
-    override suspend fun saveReykjavik(rvk: WeatherResponse) {
+    override suspend fun saveReykjavik(rvk: WeatherResponse?) {
         storedReykjavik.value = rvk
     }
 
